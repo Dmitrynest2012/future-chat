@@ -13,7 +13,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
 let responses = {}; // Объект для хранения данных с ответами
 
-let userName = "Дима"; // Новая переменная для хранения имени пользователя
+// Проверяем, есть ли сохранённое имя пользователя в локальном хранилище
+let storedUserName = localStorage.getItem("userName");
+
+// Если нет сохранённого значения, устанавливаем "Пользователь" по умолчанию
+let userName = storedUserName ? storedUserName : "Пользователь";
+
 
 
 
@@ -23,12 +28,27 @@ let storedUserGender = localStorage.getItem("userGender");
 // Если нет сохранённого значения, устанавливаем "не определено"
 let userGender = storedUserGender ? storedUserGender : "не_определен"; // Глобальная переменная для пола пользователя ("мужской" или "женский")
 
-let userAvatarURL = 'https://sun9-3.userapi.com/impg/Oe6G-yCq8KEP3Z19DcgwonXbwNfhB5DARTyflQ/m89IaVLxWh0.jpg?size=1080x1080&quality=95&sign=e42402995b711c049a2a105b07af8e9e&type=album';
+
+
+// Проверяем, есть ли сохранённая ссылка на аватарку пользователя в локальном хранилище
+let storedUserAvatarURL = localStorage.getItem("userAvatarURL");
+
+// Если нет сохранённого значения, устанавливаем ссылку по умолчанию
+let userAvatarURL = storedUserAvatarURL ? storedUserAvatarURL : 'https://sun9-3.userapi.com/impg/Oe6G-yCq8KEP3Z19DcgwonXbwNfhB5DARTyflQ/m89IaVLxWh0.jpg?size=1080x1080&quality=95&sign=e42402995b711c049a2a105b07af8e9e&type=album';
 
 
 let avatarUrlBot = 'Avrora.jpg';
 let BotName = 'Аврора';
-let styleMode = "родная"; // Глобальная переменная для выбора стиля общения (родная или вежливая)
+
+
+
+
+
+// Проверяем, есть ли сохранённый стиль общения в локальном хранилище
+let storedStyleMode = localStorage.getItem("styleMode");
+
+// Если нет сохранённого значения, устанавливаем "вежливая"
+let styleMode = storedStyleMode ? storedStyleMode : "вежливая"; // Глобальная переменная для выбора стиля общения ("родная" или "вежливая")
 
 
 
@@ -66,21 +86,36 @@ function loadResponses() {
 
 // Функция для отправки сообщения пользователя
 function sendMessage() {
-    let inputField = document.getElementById("user-input"); // Находим поле ввода
-    let userText = inputField.value.trim(); // Получаем текст пользователя без изменения регистра
-    if (userText === "") return; // Если текст пустой, выходим из функции
-    
+    // Находим элемент текстового поля ввода по его ID ("user-input")
+    let inputField = document.getElementById("user-input");
 
+    // Получаем текст из поля ввода и убираем лишние пробелы с начала и конца
+    let userText = inputField.value.trim();
+
+    // Проверяем, пустой ли текст; если да, прерываем выполнение функции
+    if (userText === "") return;
+
+    // Обрабатываем текст пользователя через функцию formatMessage (асинхронная, возвращает промис),
+    // которая форматирует текст (например, добавляет HTML для ссылок, изображений и т.д.)
     formatMessage(userText).then(formattedText => {
-        appendMessage(userName, formattedText); // сначала добавляем обработанное видео
+        // Добавляем отформатированное сообщение пользователя в чат, используя текущее имя пользователя (userName)
+        appendMessage(userName, formattedText);
+
+        // Очищаем поле ввода после отправки сообщения
         inputField.value = "";
-    
+
+        // Устанавливаем задержку в 500 миллисекунд перед тем, как бот ответит
         setTimeout(() => {
-            let reply = getResponse(userText.toLowerCase());
+            // Вызываем функцию getResponse для получения ответа бота
+            // Передаём userText дважды: первый раз для сравнения с вопросами,
+            // второй раз как оригинальный текст для сохранения регистра в командах
+            let reply = getResponse(userText, userText);
+
+            // Анимируем появление ответа бота в чате
             animateBotMessage(reply);
-        }, 500);
+        }, 500); // Задержка в 500 мс имитирует "человеческое" время реакции
     });
-}    
+}   
 
 // Добавляем обработчик событий на поле ввода
 document.getElementById("user-input").addEventListener("keydown", function(event) {
@@ -92,13 +127,13 @@ document.getElementById("user-input").addEventListener("keydown", function(event
 });
 
 
-/**
+
+ /**
  * Выбирает ответ бота на основе текста пользователя, разделяя вопрос и выражение с цифрами.
  * @param {string} userText - Текст, введенный пользователем.
  * @returns {string} - Ответ бота.
  */
- // Функция для получения ответа ИИ на вопрос пользователя
- function getResponse(userText) {
+function getResponse(userText) {
     // Регулярное выражение для поиска первой цифры в тексте пользователя
     const numberRegex = /\d/;
     // Находим индекс первой цифры в тексте, чтобы разделить вопрос на части
@@ -116,10 +151,9 @@ document.getElementById("user-input").addEventListener("keydown", function(event
 
     // Перебираем все ключи в объекте responses из файла responses.json
     for (let key in responses) {
-        // Проверяем, есть ли совпадение с вопросом до цифры или начало вопроса совпадает
+        // Проверяем, начинается ли соответствующая часть текста с одного из вопросов в responses.json
         if (responses[key].questions.some(question => 
-            questionPrefix.toLowerCase() === question.toLowerCase() || 
-            question.toLowerCase().startsWith(questionPrefix.toLowerCase())
+            (firstNumberIndex === -1 ? userText : questionPrefix).toLowerCase().startsWith(question.toLowerCase())
         )) {
             // Получаем объект с ответами для текущего стиля общения
             let answersObj = responses[key].answers;
@@ -132,7 +166,7 @@ document.getElementById("user-input").addEventListener("keydown", function(event
                 // Выбираем случайный ответ из массива возможных ответов
                 let randomAnswer = possibleAnswers[Math.floor(Math.random() * possibleAnswers.length)];
 
-                // Обрабатываем команды в ответе (например, $calcbase), передавая часть с выражением
+                // Обрабатываем команды в ответе, передавая нужную часть текста
                 return processCommands(randomAnswer, expressionPart || userText);
             }
         }
@@ -199,9 +233,12 @@ const commandMap = {
     "calcbase": calcbase, // Команда $calcbase, помогает производить простые вычисления.
     "calcage": calcage,    // Команда $calcage, считает возраст на основе д.р.
     "calcmedical": calcmedical, // Команда $calcmedical, считает завышение или занижение от нормы
-    "todaypoem": todaypoem, // Команда $todaypoem, открывает страницу с сегодняшним катреном и дает ссылку на н ее
-    "detectgender": detectgender
+    "todaypoem": todaypoem, // Команда $todaypoem, открывает страницу с сегодняшним катреном и дает ссылку на нее
+    "detectgender": detectgender, // Команда $detectgender, устанавливает пол пользователя.
+    "detectstylemode": detectstylemode, // Команда $detectstylemode, изменяет стиль общения бота.
+    "detectusername": detectusername // Команда $detectUserName, устанавливает имя пользователя.
 };
+
 
 /**
  * Вычисляет арифметическое выражение из текста пользователя (например, "2 + 3").
@@ -430,6 +467,79 @@ function detectgender(userText, answer) {
     
     return "Пол не изменен.";
 }
+
+/**
+ * Устанавливает стиль общения на основе ключевых слов в сообщении пользователя.
+ * @param {string} userText - Текст, введенный пользователем.
+ * @returns {string} - Сообщение о новом установленном стиле общения.
+ */
+function detectstylemode(userText) {
+    const informalKeywords = ["давай на ты", "лучше на ты", "давай просто", "будь простой"];
+    const formalKeywords = ["можно на вы", "лучше на вы", "давайте уважительно", "будьте вежливой"];
+
+    let detectedStyle = null;
+
+    if (informalKeywords.some(word => userText.toLowerCase().includes(word))) {
+        detectedStyle = "родная";
+    } else if (formalKeywords.some(word => userText.toLowerCase().includes(word))) {
+        detectedStyle = "вежливая";
+    }
+
+    if (detectedStyle) {
+        styleMode = detectedStyle;
+        localStorage.setItem("styleMode", detectedStyle);
+        return `Стиль общения изменен на: ${detectedStyle}.`;
+    }
+
+    return "Стиль общения не изменен.";
+}
+
+/**
+ * Устанавливает имя пользователя на основе ключевых слов в его сообщении.
+ * @param {string} userText - Текст, введенный пользователем.
+ * @returns {string} - Сообщение о новом установленном имени.
+ */
+function detectusername(userText) {
+    // Массив ключевых слов, которые указывают на запрос установки имени
+    const nameKeywords = ["мое имя", "обращайся ко мне", "зови меня"];
+
+    // Перебираем каждое ключевое слово из массива
+    for (let keyword of nameKeywords) {
+        // Ищем позицию ключевого слова в тексте, игнорируя регистр (приводим к нижнему)
+        let index = userText.toLowerCase().indexOf(keyword);
+
+        // Если ключевое слово найдено (index не равен -1)
+        if (index !== -1) {
+            // Вычисляем начало текста имени: позиция после ключевого слова
+            let possibleNameStart = index + keyword.length;
+
+            // Извлекаем потенциальное имя из оригинального текста, убирая лишние пробелы
+            let possibleName = userText.substring(possibleNameStart).trim();
+
+            // Если имя не пустое, устанавливаем его
+            if (possibleName) {
+                // Присваиваем новое имя глобальной переменной userName с сохранением оригинального регистра
+                userName = possibleName;
+
+                // Сохраняем имя в локальное хранилище браузера для постоянного использования
+                localStorage.setItem("userName", userName);
+
+                // Возвращаем сообщение с подтверждением, включая установленное имя
+                return `Хорошо, установлено имя: ${userName}.`;
+            } else {
+                // Если после ключевого слова ничего нет, просим указать имя
+                return "Вы не указали имя. Попробуйте снова.";
+            }
+        }
+    }
+
+    // Если ни одно ключевое слово не найдено, возвращаем сообщение об ошибке
+    return "Имя не изменено.";
+}
+
+
+
+
 
 
 
