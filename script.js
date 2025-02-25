@@ -21,7 +21,7 @@ let userName = "Дима"; // Новая переменная для хране�
 let storedUserGender = localStorage.getItem("userGender");
 
 // Если нет сохранённого значения, устанавливаем "не определено"
-let userGender = storedUserGender ? storedUserGender : "мужчина"; // Глобальная переменная для пола пользователя ("мужской" или "женский")
+let userGender = storedUserGender ? storedUserGender : "не_определен"; // Глобальная переменная для пола пользователя ("мужской" или "женский")
 
 let userAvatarURL = 'https://sun9-3.userapi.com/impg/Oe6G-yCq8KEP3Z19DcgwonXbwNfhB5DARTyflQ/m89IaVLxWh0.jpg?size=1080x1080&quality=95&sign=e42402995b711c049a2a105b07af8e9e&type=album';
 
