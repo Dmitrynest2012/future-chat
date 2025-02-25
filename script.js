@@ -14,7 +14,15 @@ document.addEventListener("DOMContentLoaded", () => {
 let responses = {}; // Объект для хранения данных с ответами
 
 let userName = "Дима"; // Новая переменная для хранения имени пользователя
-let userGender = "мужской"; // Глобальная переменная для пола пользователя ("мужской" или "женский")
+
+
+
+// Проверяем, есть ли сохранённый пол пользователя в локальном хранилище
+let storedUserGender = localStorage.getItem("userGender");
+
+// Если нет сохранённого значения, устанавливаем "не определено"
+let userGender = storedUserGender ? storedUserGender : "мужчина"; // Глобальная переменная для пола пользователя ("мужской" или "женский")
+
 let userAvatarURL = 'https://sun9-3.userapi.com/impg/Oe6G-yCq8KEP3Z19DcgwonXbwNfhB5DARTyflQ/m89IaVLxWh0.jpg?size=1080x1080&quality=95&sign=e42402995b711c049a2a105b07af8e9e&type=album';
 
 
@@ -176,7 +184,8 @@ const commandMap = {
     "calcbase": calcbase, // Команда $calcbase, помогает производить простые вычисления.
     "calcage": calcage,    // Команда $calcage, считает возраст на основе д.р.
     "calcmedical": calcmedical, // Команда $calcmedical, считает завышение или занижение от нормы
-    "todaypoem": todaypoem // Команда $todaypoem, открывает страницу с сегодняшним катреном и дает ссылку на н ее
+    "todaypoem": todaypoem, // Команда $todaypoem, открывает страницу с сегодняшним катреном и дает ссылку на н ее
+    "detectgender": detectgender
 };
 
 /**
@@ -380,7 +389,32 @@ function todaypoem() {
 }
 
 
+/**
+ * Устанавливает пол пользователя на основе ключевых слов в его сообщении.
+ * @param {string} userText - Текст, введенный пользователем.
+ * @param {string} answer - Исходный ответ бота (не используется в текущей логике).
+ * @returns {string} - Сообщение о новом установленном поле.
+ */
+function detectgender(userText, answer) {
+    const maleKeywords = ["мужчина", "муж.", "мужской", "мужик", "мальчик"];
+    const femaleKeywords = ["женщина", "жен.", "женский", "девушка", "девочка"];
 
+    let detectedGender = null;
+    
+    if (maleKeywords.some(word => userText.toLowerCase().includes(word))) {
+        detectedGender = "мужской";
+    } else if (femaleKeywords.some(word => userText.toLowerCase().includes(word))) {
+        detectedGender = "женский";
+    }
+
+    if (detectedGender) {
+        userGender = detectedGender;
+        localStorage.setItem("userGender", detectedGender);
+        return `Установлен пол: ${detectedGender}.`;
+    }
+    
+    return "Пол не изменен.";
+}
 
 
 
