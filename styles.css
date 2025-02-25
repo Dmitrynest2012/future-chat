@@ -549,10 +549,16 @@ button:active {
 
 
 /* Адаптивность */
-@media (min-width: 480px) {
+@media (min-width: 400px) and (orientation: portrait) {
+    /* Общие стили контейнера чата */
     .chat-container {
         width: 90%;
+        height: 93%;
         padding: 15px;
+    }
+
+    .chat-box {
+        height: 80%;
     }
 
     input {
@@ -564,20 +570,7 @@ button:active {
         width: 40px;
         margin-top: 10px;
     }
-
-    
-    /* Общие стили контейнера чата */
-.chat-container {
-
-    height: 90%;
-
 }
 
-    .chat-box {
-        height: 80%;
-    }
-
-    
-}
 
 
