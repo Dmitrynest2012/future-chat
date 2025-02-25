@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чат с Авророй</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="notification-container" class="notification-container"></div>
+
+    <div class="chat-container">
+        <div class="chat-box" id="chat-box"></div>
+        <textarea id="user-input" autocomplete="off" placeholder="Введите сообщение..."></textarea>
+       
+        <button onclick="sendMessage()">➤</button>
+        <button id="emoji-button" onclick="toggleEmojiPicker()">😊</button>
+        
+    </div>
+
+    <div id="emoji-picker" style="display:none;">
+        <div id="emoji-section">
+            <!-- Эмоции -->
+            <div class="emoji-category">
+                <h3>Эмоции</h3>
+                <button onclick="selectEmoji('😀')">😀</button>
+                <button onclick="selectEmoji('😁')">😁</button>
+                <button onclick="selectEmoji('😂')">😂</button>
+                <button onclick="selectEmoji('🤣')">🤣</button>
+                <button onclick="selectEmoji('😃')">😃</button>
+                <button onclick="selectEmoji('😄')">😄</button>
+                <button onclick="selectEmoji('😆')">😆</button>
+                <button onclick="selectEmoji('😅')">😅</button>
+                <button onclick="selectEmoji('😊')">😊</button>
+                <button onclick="selectEmoji('😇')">😇</button>
+                <button onclick="selectEmoji('🙂')">🙂</button>
+                <button onclick="selectEmoji('😉')">😉</button>
+                <button onclick="selectEmoji('😎')">😎</button>
+                <button onclick="selectEmoji('🤩')">🤩</button>
+                <button onclick="selectEmoji('🥳')">🥳</button>
+                <button onclick="selectEmoji('🤗')">🤗</button>
+                <button onclick="selectEmoji('😋')">😋</button>
+                <button onclick="selectEmoji('😜')">😜</button>
+                <button onclick="selectEmoji('🤪')">🤪</button>
+            </div>
+    
+            <!-- Любовь -->
+            <div class="emoji-category">
+                <h3>Любовь</h3>
+                <button onclick="selectEmoji('😍')">😍</button>
+                <button onclick="selectEmoji('😘')">😘</button>
+                <button onclick="selectEmoji('🥰')">🥰</button>
+                <button onclick="selectEmoji('💖')">💖</button>
+                <button onclick="selectEmoji('❤️')">❤️</button>
+                <button onclick="selectEmoji('💘')">💘</button>
+                <button onclick="selectEmoji('💕')">💕</button>
+                <button onclick="selectEmoji('💞')">💞</button>
+                <button onclick="selectEmoji('💓')">💓</button>
+                <button onclick="selectEmoji('💗')">💗</button>
+                <button onclick="selectEmoji('💙')">💙</button>
+                <button onclick="selectEmoji('💚')">💚</button>
+                <button onclick="selectEmoji('💜')">💜</button>
+                <button onclick="selectEmoji('🫶')">🫶</button>
+                <button onclick="selectEmoji('💏')">💏</button>
+            </div>
+    
+            <!-- Грусть и тревога -->
+            <div class="emoji-category">
+                <h3>Грусть и тревога</h3>
+                <button onclick="selectEmoji('😢')">😢</button>
+                <button onclick="selectEmoji('😭')">😭</button>
+                <button onclick="selectEmoji('😞')">😞</button>
+                <button onclick="selectEmoji('😔')">😔</button>
+                <button onclick="selectEmoji('😟')">😟</button>
+                <button onclick="selectEmoji('😣')">😣</button>
+                <button onclick="selectEmoji('😖')">😖</button>
+                <button onclick="selectEmoji('😫')">😫</button>
+                <button onclick="selectEmoji('😩')">😩</button>
+                <button onclick="selectEmoji('💔')">💔</button>
+                <button onclick="selectEmoji('🥺')">🥺</button>
+                <button onclick="selectEmoji('😓')">😓</button>
+            </div>
+    
+            <!-- Раздражение и злость -->
+            <div class="emoji-category">
+                <h3>Раздражение и злость</h3>
+                <button onclick="selectEmoji('😠')">😠</button>
+                <button onclick="selectEmoji('😡')">😡</button>
+                <button onclick="selectEmoji('🤬')">🤬</button>
+                <button onclick="selectEmoji('🤯')">🤯</button>
+                <button onclick="selectEmoji('😤')">😤</button>
+                <button onclick="selectEmoji('👿')">👿</button>
+                <button onclick="selectEmoji('😾')">😾</button>
+                <button onclick="selectEmoji('💢')">💢</button>
+            </div>
+    
+            <!-- Животные и природа -->
+<div class="emoji-category">
+    <h3>Животные и природа</h3>
+    <button onclick="selectEmoji('🐶')">🐶</button>
+    <button onclick="selectEmoji('🐱')">🐱</button>
+    <button onclick="selectEmoji('🦁')">🦁</button>
+    <button onclick="selectEmoji('🐵')">🐵</button>
+    <button onclick="selectEmoji('🐼')">🐼</button>
+    <button onclick="selectEmoji('🐸')">🐸</button>
+    <button onclick="selectEmoji('🦊')">🦊</button>
+    <button onclick="selectEmoji('🐰')">🐰</button>
+    <button onclick="selectEmoji('🦉')">🦉</button>
+    <button onclick="selectEmoji('🌲')">🌲</button>
+    <button onclick="selectEmoji('🌳')">🌳</button>
+    <button onclick="selectEmoji('🌴')">🌴</button>
+    <button onclick="selectEmoji('🌵')">🌵</button>
+    <button onclick="selectEmoji('🌻')">🌻</button>
+    <button onclick="selectEmoji('🍂')">🍂</button>
+    <button onclick="selectEmoji('🌼')">🌼</button>
+    <button onclick="selectEmoji('🐨')">🐨</button>
+    <button onclick="selectEmoji('🦓')">🦓</button>
+    <button onclick="selectEmoji('🦄')">🦄</button>
+</div>
+
+<!-- Еда и напитки -->
+<div class="emoji-category">
+    <h3>Еда и напитки</h3>
+    <button onclick="selectEmoji('🍕')">🍕</button>
+    <button onclick="selectEmoji('🍔')">🍔</button>
+    <button onclick="selectEmoji('🍟')">🍟</button>
+    <button onclick="selectEmoji('🍣')">🍣</button>
+    <button onclick="selectEmoji('🍩')">🍩</button>
+    <button onclick="selectEmoji('☕')">☕</button>
+    <button onclick="selectEmoji('🍹')">🍹</button>
+    <button onclick="selectEmoji('🍎')">🍎</button>
+    <button onclick="selectEmoji('🍊')">🍊</button>
+    <button onclick="selectEmoji('🍉')">🍉</button>
+    <button onclick="selectEmoji('🍇')">🍇</button>
+    <button onclick="selectEmoji('🍫')">🍫</button>
+    <button onclick="selectEmoji('🍪')">🍪</button>
+    <button onclick="selectEmoji('🍒')">🍒</button>
+    <button onclick="selectEmoji('🍓')">🍓</button>
+    <button onclick="selectEmoji('🥧')">🥧</button>
+    <button onclick="selectEmoji('🍽️')">🍽️</button>
+    <button onclick="selectEmoji('🍷')">🍷</button>
+    <button onclick="selectEmoji('🥤')">🥤</button>
+</div>
+
+        </div>
+    </div>
+    
+    
+    
+    
+    
+
+    <script src="script.js"></script>
+</body>
+</html>
+
+
+
