@@ -88,6 +88,7 @@ body {
 
 .avatar {
     position: absolute;
+    background-color: #0068a5ad;
     top: 5px;
     left: 8px;
     width: 40px;

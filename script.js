@@ -34,7 +34,11 @@ let userGender = storedUserGender ? storedUserGender : "не_определен"
 let storedUserAvatarURL = localStorage.getItem("userAvatarURL");
 
 // Если нет сохранённого значения, устанавливаем ссылку по умолчанию
-let userAvatarURL = storedUserAvatarURL ? storedUserAvatarURL : 'https://sun9-3.userapi.com/impg/Oe6G-yCq8KEP3Z19DcgwonXbwNfhB5DARTyflQ/m89IaVLxWh0.jpg?size=1080x1080&quality=95&sign=e42402995b711c049a2a105b07af8e9e&type=album';
+let userAvatarURL = storedUserAvatarURL ? storedUserAvatarURL : 'AvaUserBasic.jpg';
+
+
+let rawUserText = ""; // Переменная для хранения необработанного текста пользователя
+
 
 
 let avatarUrlBot = 'Avrora.jpg';
@@ -129,14 +133,13 @@ document.getElementById("user-input").addEventListener("keydown", function(event
 
 
  /**
- * Выбирает ответ бота на основе текста пользователя, разделяя вопрос и выражение с цифрами.
- * @param {string} userText - Текст, введенный пользователем.
+ * Выбирает ответ бота на основе текста пользователя, разделяя вопрос и выражение с цифрами, если требуется.
+ * @param {string} userText - Текст, введенный пользователем (обработанный).
  * @returns {string} - Ответ бота.
  */
 function getResponse(userText) {
     // Регулярное выражение для поиска первой цифры в тексте пользователя
     const numberRegex = /\d/;
-    // Находим индекс первой цифры в тексте, чтобы разделить вопрос на части
     const firstNumberIndex = userText.search(numberRegex);
 
     // Инициализируем переменные для хранения частей текста
@@ -145,8 +148,8 @@ function getResponse(userText) {
 
     // Если в тексте есть цифра, разделяем его на две части
     if (firstNumberIndex !== -1) {
-        questionPrefix = userText.substring(0, firstNumberIndex).trim(); // До цифры, убираем лишние пробелы
-        expressionPart = userText.substring(firstNumberIndex).trim();    // От цифры и дальше
+        questionPrefix = userText.substring(0, firstNumberIndex).trim();
+        expressionPart = userText.substring(firstNumberIndex).trim();
     }
 
     // Перебираем все ключи в объекте responses из файла responses.json
@@ -155,24 +158,21 @@ function getResponse(userText) {
         if (responses[key].questions.some(question => 
             (firstNumberIndex === -1 ? userText : questionPrefix).toLowerCase().startsWith(question.toLowerCase())
         )) {
-            // Получаем объект с ответами для текущего стиля общения
             let answersObj = responses[key].answers;
 
-            // Проверяем, есть ли ответы для текущего стиля (например, "родная")
             if (answersObj && answersObj[styleMode]) {
                 let answers = answersObj[styleMode];
-                // Выбираем ответы в зависимости от пола пользователя, если их нет — берем общие
                 let possibleAnswers = answers[userGender] || answers;
-                // Выбираем случайный ответ из массива возможных ответов
                 let randomAnswer = possibleAnswers[Math.floor(Math.random() * possibleAnswers.length)];
 
-                // Обрабатываем команды в ответе, передавая нужную часть текста
-                return processCommands(randomAnswer, expressionPart || userText);
+                // Определяем, какой текст передать в зависимости от команды
+                let textForCommands = determineTextForCommands(randomAnswer, userText, expressionPart);
+                return processCommands(randomAnswer, textForCommands);
             }
         }
     }
 
-    // Если совпадений не найдено, возвращаем стандартный ответ для случаев "не понял"
+    // Если совпадений не найдено, возвращаем стандартный ответ
     const noResponseAnswers = {
         "вежливая": [
             "Извините, я не поняла ваш вопрос.",
@@ -190,8 +190,37 @@ function getResponse(userText) {
         ]
     };
 
-    // Выбираем случайный стандартный ответ в зависимости от стиля общения
     return noResponseAnswers[styleMode][Math.floor(Math.random() * noResponseAnswers[styleMode].length)];
+}
+
+/**
+ * Определяет, какой текст передать в команды на основе их типа.
+ * @param {string} answer - Ответ бота с возможными командами.
+ * @param {string} userText - Полный обработанный текст пользователя.
+ * @param {string} expressionPart - Часть текста с цифрами (если есть).
+ * @returns {string} - Текст для передачи в команды.
+ */
+function determineTextForCommands(answer, userText, expressionPart) {
+    // Команды, которые требуют только числовую часть
+    const numericCommands = ["$calcbase", "$calcage", "$calcmedical"];
+    // Команды, которые работают с полным текстом или не зависят от текста
+    const fullTextCommands = ["$detectavatar", "$detectusername", "$detectgender", "$detectstylemode", "$todaypoem"];
+
+    // Проверяем, какие команды есть в ответе
+    for (let cmd of numericCommands) {
+        if (answer.includes(cmd)) {
+            return expressionPart || userText; // Для числовых команд отдаем только числовую часть, если она есть
+        }
+    }
+
+    for (let cmd of fullTextCommands) {
+        if (answer.includes(cmd)) {
+            return userText; // Для остальных команд отдаем полный текст
+        }
+    }
+
+    // Если команда неизвестна или отсутствует, возвращаем полный текст по умолчанию
+    return userText;
 }
 
 /**
@@ -234,9 +263,12 @@ const commandMap = {
     "calcage": calcage,    // Команда $calcage, считает возраст на основе д.р.
     "calcmedical": calcmedical, // Команда $calcmedical, считает завышение или занижение от нормы
     "todaypoem": todaypoem, // Команда $todaypoem, открывает страницу с сегодняшним катреном и дает ссылку на нее
+    "yesterdaypoem": yesterdaypoem, // Команда $yesterdaypoem, открывает страницу со вчерашним катреном и дает ссылку на нее
+    "poembydate": poembydate, // Команда $poembydate, открывает страницу с катреном за указанное число, месяц, год.
     "detectgender": detectgender, // Команда $detectgender, устанавливает пол пользователя.
     "detectstylemode": detectstylemode, // Команда $detectstylemode, изменяет стиль общения бота.
-    "detectusername": detectusername // Команда $detectUserName, устанавливает имя пользователя.
+    "detectusername": detectusername, // Команда $detectUserName, устанавливает имя пользователя.
+    "detectavatar": detectavatar // Новая команда для смены аватарки
 };
 
 
@@ -440,6 +472,104 @@ function todaypoem() {
     return `<a href='${url}' target='_blank'>${url}</a> Если запрашиваемая страница не найдена, значит катрен еще не вышел.`;
 }
 
+/**
+ * Открывает страницу с катреном за вчера.
+ * @returns {string} - Ссылка на вчерашнюю страницу с катреном в HTML формате.
+ */
+function yesterdaypoem() {
+    let yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1); // Вычисляем вчерашнюю дату
+
+    let day = String(yesterday.getDate()).padStart(2, "0");
+    let month = String(yesterday.getMonth() + 1).padStart(2, "0");
+    let year = String(yesterday.getFullYear()).slice(2); // Оставляем две последние цифры года
+
+    let formattedDate = `${day}.${month}.${year}`;
+    let url = `https://blagayavest.info/poems/${formattedDate}.html`;
+
+    // Открываем ссылку в новой вкладке
+    window.open(url, "_blank");
+
+    // Возвращаем ссылку в HTML формате
+    return `<a href='${url}' target='_blank'>${url}</a> Если запрашиваемая страница не найдена, значит катрен еще не вышел или отсутствует.`;
+}
+
+
+
+
+/**
+ * Открывает страницу с катреном за указанную дату, извлекая дату из текста пользователя.
+ * Поддерживает форматы: дд.мм.гг(гггг), дд месяц гггг г., дд месяц, дд.мм.
+ * Если год не указан, подставляется текущий.
+ * @param {string} userText - Текст, введённый пользователем, содержащий команду и дату (например, "покажи катрен за 10 января").
+ * @returns {string} - HTML-ссылка на страницу с катреном или сообщение об ошибке, если дата не распознана.
+ */
+function poembydate(userText) {
+    // Удаляем "покажи катрен за" (регистронезависимо), нормализуем пробелы и убираем лишние
+    const dateText = userText.replace(/покажи\s+катрен\s+за\s*/i, "").trim().replace(/\s+/g, " ");
+    console.log("dateText:", dateText); // Дебаг: показываем очищенный текст с датой
+
+    // Массив регулярных выражений для разных форматов даты
+    const datePatterns = [
+        /(\d{2})\.(\d{2})\.(\d{2,4})/, // дд.мм.гг или дд.мм.гггг (например, 12.02.24 или 12.02.2024)
+        /(\d{1,2})\s+(января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)\s+(\d{4})\s*г?/i, // дд месяц гггг г. (например, 12 сентября 2024 г.)
+        /(\d{1,2})\s+(января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)/i, // дд месяц (например, 10 января)
+        /(\d{2})\.(\d{2})/ // дд.мм (например, 10.01)
+    ];
+
+    let match;
+    // Проверяем каждый паттерн, пока не найдём совпадение
+    for (let pattern of datePatterns) {
+        console.log("Testing pattern:", pattern); // Дебаг: показываем тестируемый паттерн
+        match = dateText.match(pattern);
+        if (match) {
+            console.log("Match found:", match); // Дебаг: показываем, что нашёл паттерн
+            break;
+        }
+    }
+
+    // Если дата не распознана, возвращаем сообщение об ошибке
+    if (!match) {
+        console.log("No match for:", dateText); // Дебаг: указываем, что совпадений нет
+        return "Не удалось распознать дату. Введите в формате дд.мм.гг или дд название месяца год.";
+    }
+
+    // Объект для преобразования названий месяцев в числовой формат
+    const months = {
+        "января": "01", "февраля": "02", "марта": "03", "апреля": "04",
+        "мая": "05", "июня": "06", "июля": "07", "августа": "08",
+        "сентября": "09", "октября": "10", "ноября": "11", "декабря": "12"
+    };
+
+    let day, month, year;
+    // Обработка распознанной даты
+    if (!isNaN(parseInt(match[2]))) {
+        // Числовой формат (дд.мм или дд.мм.гг)
+        day = match[1].padStart(2, "0"); // День с ведущим нулём (например, "05")
+        month = match[2].padStart(2, "0"); // Месяц с ведущим нулём (например, "02")
+        year = match[3] ? match[3].slice(-2) : new Date().getFullYear().toString().slice(-2); // Год: берём последние 2 цифры или текущий год
+    } else {
+        // Текстовый формат (дд месяц или дд месяц гггг)
+        day = match[1].padStart(2, "0"); // День с ведущим нулём
+        month = months[match[2].toLowerCase()]; // Преобразуем месяц из текста в число
+        year = match[3] ? match[3].slice(-2) : new Date().getFullYear().toString().slice(-2); // Год: указанный или текущий
+    }
+
+    // Формируем дату в формате дд.мм.гг
+    const formattedDate = `${day}.${month}.${year}`;
+    // Генерируем URL для страницы с катреном
+    const url = `https://blagayavest.info/poems/${formattedDate}.html`;
+
+    // Открываем страницу в новой вкладке
+    window.open(url, "_blank");
+    // Возвращаем HTML-ссылку с пояснением
+    return `<a href='${url}' target='_blank'>${url}</a> Если запрашиваемая страница не найдена, значит катрен за эту дату отсутствует.`;
+}
+
+
+
+
+
 
 /**
  * Устанавливает пол пользователя на основе ключевых слов в его сообщении.
@@ -467,6 +597,7 @@ function detectgender(userText, answer) {
     
     return "Пол не изменен.";
 }
+
 
 /**
  * Устанавливает стиль общения на основе ключевых слов в сообщении пользователя.
@@ -537,7 +668,42 @@ function detectusername(userText) {
     return "Имя не изменено.";
 }
 
+/**
+ * Устанавливает URL аватарки пользователя на основе ключевых слов и ссылки в сообщении.
+ * @param {string} userText - Текст, введенный пользователем (для поиска ключевых слов).
+ * @returns {string} - Сообщение о новом установленном аватаре или отсутствии изменений.
+ */
+function detectavatar(userText) {
+    const avatarKeywords = ["мой аватар", "установи аватар", "поменяй аватар", "измени аватар"];
+    const urlRegex = /https?:\/\/[^\s]+/;
 
+    console.log("detectavatar userText:", userText); // Для отладки
+    console.log("detectavatar rawUserText:", rawUserText); // Для отладки
+
+    for (let keyword of avatarKeywords) {
+        let index = userText.toLowerCase().indexOf(keyword);
+        if (index !== -1) {
+            // Находим позицию после ключевого слова в rawUserText
+            let rawIndex = rawUserText.toLowerCase().indexOf(keyword);
+            if (rawIndex !== -1) {
+                let possibleUrlStart = rawIndex + keyword.length;
+                let possibleUrlText = rawUserText.substring(possibleUrlStart).trim();
+                let urlMatch = possibleUrlText.match(urlRegex);
+
+                if (urlMatch) {
+                    let newAvatarURL = urlMatch[0];
+                    userAvatarURL = newAvatarURL;
+                    localStorage.setItem("userAvatarURL", userAvatarURL);
+                    return `Аватарка обновлена: ${userAvatarURL}`;
+                } else {
+                    return "Не найдена ссылка для аватарки. Укажи URL после ключевых слов.";
+                }
+            }
+        }
+    }
+
+    return "Аватарка осталась без изменений.";
+}
 
 
 
@@ -548,6 +714,10 @@ function detectusername(userText) {
 document.getElementById("user-input").addEventListener("input", function () {
     let textarea = this;
     let text = textarea.value;
+
+    // Сохраняем исходный текст до его обработки
+    rawUserText = text;
+    console.log(rawUserText);
 
     // Регулярное выражение для поиска ссылок на изображения
     const imageRegex = /(?<!['"])(https?:\/\/[^\s]+?\.(jpg|jpeg|png|gif|webp|svg))(?!['"])/gi;
