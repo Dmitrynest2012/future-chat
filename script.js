@@ -268,7 +268,8 @@ const commandMap = {
     "detectgender": detectgender, // Команда $detectgender, устанавливает пол пользователя.
     "detectstylemode": detectstylemode, // Команда $detectstylemode, изменяет стиль общения бота.
     "detectusername": detectusername, // Команда $detectUserName, устанавливает имя пользователя.
-    "detectavatar": detectavatar // Новая команда для смены аватарки
+    "detectavatar": detectavatar, // Новая команда для смены аватарки
+    "getusername": getusername // Новая команда для вывода текущего имени пользователя
 };
 
 
@@ -566,7 +567,13 @@ function poembydate(userText) {
     return `<a href='${url}' target='_blank'>${url}</a> Если запрашиваемая страница не найдена, значит катрен за эту дату отсутствует.`;
 }
 
-
+/**
+ * Возвращает имя пользователя из глобальной переменной userName.
+ * @returns {string} Имя пользователя, хранящееся в глобальной переменной userName.
+ */
+function getusername() {
+    return userName;
+}
 
 
 
